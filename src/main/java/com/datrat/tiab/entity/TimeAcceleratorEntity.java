@@ -12,8 +12,8 @@ import net.minecraft.world.World;
 
 public class TimeAcceleratorEntity extends Entity implements IEntityAdditionalSpawnData {
     private static final int TIME_RATE_WATCHER = 16;
+    private static final int REMAINING_TIME_WATCHER = 17;
 
-    private int remainingTime;
     private int targetX;
     private int targetY;
     private int targetZ;
@@ -34,6 +34,7 @@ public class TimeAcceleratorEntity extends Entity implements IEntityAdditionalSp
     @Override
     protected void entityInit() {
         dataWatcher.addObject(TIME_RATE_WATCHER, Integer.valueOf(1));
+        dataWatcher.addObject(REMAINING_TIME_WATCHER, Integer.valueOf(0));
     }
 
     @Override
@@ -49,8 +50,8 @@ public class TimeAcceleratorEntity extends Entity implements IEntityAdditionalSp
 
         if (!worldObj.isRemote) {
             tickTarget();
-            remainingTime--;
-            if (remainingTime <= 0) {
+            setRemainingTime(getRemainingTime() - 1);
+            if (getRemainingTime() <= 0) {
                 setDead();
             }
         }
@@ -77,7 +78,7 @@ public class TimeAcceleratorEntity extends Entity implements IEntityAdditionalSp
     @Override
     protected void readEntityFromNBT(NBTTagCompound compound) {
         setTimeRate(compound.getInteger(NBTKeys.ENTITY_TIME_RATE));
-        remainingTime = compound.getInteger(NBTKeys.ENTITY_REMAINING_TIME);
+        setRemainingTime(compound.getInteger(NBTKeys.ENTITY_REMAINING_TIME));
         if (compound.hasKey(NBTKeys.ENTITY_POS)) {
             NBTTagCompound pos = compound.getCompoundTag(NBTKeys.ENTITY_POS);
             setTarget(pos.getInteger("x"), pos.getInteger("y"), pos.getInteger("z"));
@@ -87,7 +88,7 @@ public class TimeAcceleratorEntity extends Entity implements IEntityAdditionalSp
     @Override
     protected void writeEntityToNBT(NBTTagCompound compound) {
         compound.setInteger(NBTKeys.ENTITY_TIME_RATE, getTimeRate());
-        compound.setInteger(NBTKeys.ENTITY_REMAINING_TIME, remainingTime);
+        compound.setInteger(NBTKeys.ENTITY_REMAINING_TIME, getRemainingTime());
         NBTTagCompound pos = new NBTTagCompound();
         pos.setInteger("x", targetX);
         pos.setInteger("y", targetY);
@@ -100,7 +101,7 @@ public class TimeAcceleratorEntity extends Entity implements IEntityAdditionalSp
         buffer.writeInt(targetX);
         buffer.writeInt(targetY);
         buffer.writeInt(targetZ);
-        buffer.writeInt(remainingTime);
+        buffer.writeInt(getRemainingTime());
         buffer.writeInt(getTimeRate());
         buffer.writeBoolean(hasTarget);
     }
@@ -110,7 +111,7 @@ public class TimeAcceleratorEntity extends Entity implements IEntityAdditionalSp
         int x = buffer.readInt();
         int y = buffer.readInt();
         int z = buffer.readInt();
-        remainingTime = buffer.readInt();
+        setRemainingTime(buffer.readInt());
         setTimeRate(buffer.readInt());
         if (buffer.readBoolean()) {
             setTarget(x, y, z);
@@ -134,10 +135,10 @@ public class TimeAcceleratorEntity extends Entity implements IEntityAdditionalSp
     }
 
     public int getRemainingTime() {
-        return remainingTime;
+        return dataWatcher.getWatchableObjectInt(REMAINING_TIME_WATCHER);
     }
 
     public void setRemainingTime(int remainingTime) {
-        this.remainingTime = remainingTime;
+        dataWatcher.updateObject(REMAINING_TIME_WATCHER, Integer.valueOf(remainingTime));
     }
 }
