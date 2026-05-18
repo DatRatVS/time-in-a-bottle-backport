@@ -141,4 +141,20 @@ public class TimeAcceleratorEntity extends Entity implements IEntityAdditionalSp
     public void setRemainingTime(int remainingTime) {
         dataWatcher.updateObject(REMAINING_TIME_WATCHER, Integer.valueOf(remainingTime));
     }
+
+    public boolean hasTarget() {
+        return hasTarget;
+    }
+
+    public int getTargetX() {
+        return targetX;
+    }
+
+    public int getTargetY() {
+        return targetY;
+    }
+
+    public int getTargetZ() {
+        return targetZ;
+    }
 }

@@ -9,7 +9,7 @@ import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
 public class TimeAcceleratorRenderer extends Render {
-    private static final float FACE_OFFSET = 0.506F;
+    private static final float FACE_OFFSET = 0.501F;
     private static final float TEXT_SCALE = 0.0125F;
 
     public TimeAcceleratorRenderer() {
@@ -19,16 +19,25 @@ public class TimeAcceleratorRenderer extends Render {
     @Override
     public void doRender(Entity entity, double x, double y, double z, float entityYaw, float partialTicks) {
         TimeAcceleratorEntity accelerator = (TimeAcceleratorEntity) entity;
+        if (!accelerator.hasTarget()) {
+            return;
+        }
+
         String timeText = Math.max(0, (accelerator.getRemainingTime() + 19) / 20) + "s";
         String rateText = "x" + (accelerator.getTimeRate() * 2);
         FontRenderer font = Minecraft.getMinecraft().fontRendererObj;
+        double anchorX = x + (accelerator.getTargetX() + 0.5D - interpolate(entity.prevPosX, entity.posX, partialTicks));
+        double anchorY = y + (accelerator.getTargetY() + 0.5D - interpolate(entity.prevPosY, entity.posY, partialTicks));
+        double anchorZ = z + (accelerator.getTargetZ() + 0.5D - interpolate(entity.prevPosZ, entity.posZ, partialTicks));
 
         GL11.glPushMatrix();
-        GL11.glTranslated(x, y, z);
+        GL11.glTranslated(anchorX, anchorY, anchorZ);
         GL11.glDisable(GL11.GL_LIGHTING);
         GL11.glDisable(GL11.GL_CULL_FACE);
         GL11.glDepthMask(false);
         GL11.glEnable(GL11.GL_BLEND);
+        GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
+        GL11.glPolygonOffset(-1.0F, -1.0F);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
         drawFace(font, timeText, rateText, 0.0F, 0.0F, FACE_OFFSET, 0.0F, 0.0F);
@@ -38,6 +47,7 @@ public class TimeAcceleratorRenderer extends Render {
         drawFace(font, timeText, rateText, 0.0F, FACE_OFFSET, 0.0F, 90.0F, 0.0F);
         drawFace(font, timeText, rateText, 0.0F, -FACE_OFFSET, 0.0F, -90.0F, 0.0F);
 
+        GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
         GL11.glDisable(GL11.GL_BLEND);
         GL11.glDepthMask(true);
         GL11.glEnable(GL11.GL_CULL_FACE);
@@ -50,7 +60,7 @@ public class TimeAcceleratorRenderer extends Render {
         GL11.glTranslatef(x, y, z);
         GL11.glRotatef(rotateY, 0.0F, 1.0F, 0.0F);
         GL11.glRotatef(rotateX, 1.0F, 0.0F, 0.0F);
-        GL11.glScalef(-TEXT_SCALE, -TEXT_SCALE, TEXT_SCALE);
+        GL11.glScalef(TEXT_SCALE, -TEXT_SCALE, TEXT_SCALE);
 
         drawCentered(font, timeText, -11);
         drawCentered(font, rateText, 1);
@@ -60,6 +70,10 @@ public class TimeAcceleratorRenderer extends Render {
 
     private void drawCentered(FontRenderer font, String text, int y) {
         font.drawStringWithShadow(text, -font.getStringWidth(text) / 2, y, 0xFFFFFFFF);
+    }
+
+    private double interpolate(double previous, double current, float partialTicks) {
+        return previous + (current - previous) * partialTicks;
     }
 
     @Override
