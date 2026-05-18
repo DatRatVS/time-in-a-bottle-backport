@@ -2,13 +2,15 @@ package com.datrat.tiab.entity;
 
 import com.datrat.tiab.config.NBTKeys;
 import com.datrat.tiab.config.TiabConfig;
+import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
-public class TimeAcceleratorEntity extends Entity {
+public class TimeAcceleratorEntity extends Entity implements IEntityAdditionalSpawnData {
     private static final int TIME_RATE_WATCHER = 16;
 
     private int remainingTime;
@@ -19,7 +21,7 @@ public class TimeAcceleratorEntity extends Entity {
 
     public TimeAcceleratorEntity(World world) {
         super(world);
-        setSize(0.0F, 0.0F);
+        setSize(1.0F, 1.0F);
         noClip = true;
     }
 
@@ -91,6 +93,29 @@ public class TimeAcceleratorEntity extends Entity {
         pos.setInteger("y", targetY);
         pos.setInteger("z", targetZ);
         compound.setTag(NBTKeys.ENTITY_POS, pos);
+    }
+
+    @Override
+    public void writeSpawnData(ByteBuf buffer) {
+        buffer.writeInt(targetX);
+        buffer.writeInt(targetY);
+        buffer.writeInt(targetZ);
+        buffer.writeInt(remainingTime);
+        buffer.writeInt(getTimeRate());
+        buffer.writeBoolean(hasTarget);
+    }
+
+    @Override
+    public void readSpawnData(ByteBuf buffer) {
+        int x = buffer.readInt();
+        int y = buffer.readInt();
+        int z = buffer.readInt();
+        remainingTime = buffer.readInt();
+        setTimeRate(buffer.readInt());
+        if (buffer.readBoolean()) {
+            setTarget(x, y, z);
+            setPosition(x + 0.5D, y + 0.5D, z + 0.5D);
+        }
     }
 
     private void setTarget(int x, int y, int z) {

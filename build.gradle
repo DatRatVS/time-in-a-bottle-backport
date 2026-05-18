@@ -13,9 +13,9 @@ apply plugin: "forge"
 
 import groovy.json.JsonSlurper
 
-version = "1.7.10-4.0.4"
+version = "1.0.1"
 group = "com.datrat.tiab"
-archivesBaseName = "time-in-a-bottle"
+archivesBaseName = "time-in-a-bottle-1.7.10"
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
