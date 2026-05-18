@@ -1,0 +1,105 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { name = "forge"; url = "https://maven.minecraftforge.net/" }
+        maven { name = "sonatype"; url = "https://oss.sonatype.org/content/repositories/snapshots/" }
+    }
+    dependencies {
+        classpath "net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT"
+    }
+}
+
+apply plugin: "forge"
+
+import groovy.json.JsonSlurper
+
+version = "1.7.10-4.0.4"
+group = "com.datrat.tiab"
+archivesBaseName = "time-in-a-bottle"
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+minecraft {
+    version = "1.7.10-10.13.4.1614-1.7.10"
+    runDir = "run"
+    mappings = "stable_12"
+}
+
+ext.minecraftCache = file("${gradle.gradleUserHomeDir}/caches/minecraft")
+ext.mcClientJar = file("${minecraftCache}/net/minecraft/minecraft/1.7.10/minecraft-1.7.10.jar")
+ext.mcServerJar = file("${minecraftCache}/net/minecraft/minecraft_server/1.7.10/minecraft_server-1.7.10.jar")
+
+task seedMinecraftDownloads {
+    doLast {
+        if (isUsable(project.mcClientJar) && isUsable(project.mcServerJar)) {
+            return
+        }
+
+        def slurper = new JsonSlurper()
+        def manifest = slurper.parse(new URL("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"))
+        def versionMeta = manifest.versions.find { it.id == "1.7.10" }
+        if (versionMeta == null) {
+            throw new GradleException("Could not find Minecraft 1.7.10 metadata in Mojang version manifest.")
+        }
+
+        def versionJson = slurper.parse(new URL(versionMeta.url))
+        downloadIfMissing(versionJson.downloads.client.url, project.mcClientJar)
+        downloadIfMissing(versionJson.downloads.server.url, project.mcServerJar)
+    }
+}
+
+def downloadIfMissing(String url, File target) {
+    if (isUsable(target)) {
+        return
+    }
+    target.parentFile.mkdirs()
+    target.withOutputStream { out ->
+        new URL(url).withInputStream { input ->
+            out << input
+        }
+    }
+}
+
+def isUsable(File file) {
+    return file.exists() && file.length() > 0L
+}
+
+tasks.whenTaskAdded { task ->
+    configureLegacyMinecraftDownloadTask(task)
+}
+
+tasks.all { task ->
+    configureLegacyMinecraftDownloadTask(task)
+}
+
+def configureLegacyMinecraftDownloadTask(Task task) {
+    if (task.name == "downloadClient") {
+        task.dependsOn seedMinecraftDownloads
+        task.enabled = false
+    }
+    if (task.name == "downloadServer") {
+        task.dependsOn seedMinecraftDownloads
+        task.enabled = false
+    }
+}
+
+downloadClient.dependsOn seedMinecraftDownloads
+downloadClient.enabled = false
+downloadServer.dependsOn seedMinecraftDownloads
+downloadServer.enabled = false
+compileJava.dependsOn seedMinecraftDownloads
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+
+    from(sourceSets.main.resources.srcDirs) {
+        include "mcmod.info"
+        expand "version": project.version, "mcversion": project.minecraft.version
+    }
+
+    from(sourceSets.main.resources.srcDirs) {
+        exclude "mcmod.info"
+    }
+}

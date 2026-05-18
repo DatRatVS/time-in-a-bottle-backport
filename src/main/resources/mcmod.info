@@ -1,0 +1,16 @@
+[
+  {
+    "modid": "tiab",
+    "name": "Time In A Bottle",
+    "description": "Store time while carried and spend it to accelerate blocks.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": ["DatRatVS", "haoict", "MagoRage"],
+    "credits": "Backport of Time In A Bottle behavior to Forge 1.7.10.",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
