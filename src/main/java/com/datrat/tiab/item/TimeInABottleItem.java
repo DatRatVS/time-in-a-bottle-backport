@@ -17,6 +17,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.play.server.S2FPacketSetSlot;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 
@@ -110,21 +111,21 @@ public class TimeInABottleItem extends Item {
             int usedUpTime = getEachUseDuration() - accelerator.getRemainingTime();
 
             if (currentRate >= maxRate) {
-                return true;
+                return false;
             }
 
             nextRate = currentRate * 2;
             energyRequired = getEnergyCost(nextRate);
 
             if (!canUse(stack, creative, energyRequired)) {
-                return true;
+                return false;
             }
 
             accelerator.setTimeRate(nextRate);
             accelerator.setRemainingTime(accelerator.getRemainingTime() + usedUpTime / 2);
         } else {
             if (!canUse(stack, creative, energyRequired)) {
-                return true;
+                return false;
             }
 
             accelerator = new TimeAcceleratorEntity(world, x, y, z);
@@ -133,7 +134,7 @@ public class TimeInABottleItem extends Item {
         }
 
         if (!creative) {
-            applyDamage(stack, energyRequired);
+            consumeStoredTime(stack, player, energyRequired);
         }
         playSound(world, x, y, z, nextRate);
         return true;
@@ -162,6 +163,32 @@ public class TimeInABottleItem extends Item {
 
     public void applyDamage(ItemStack stack, int damage) {
         setStoredTime(stack, getStoredTime(stack) - damage);
+    }
+
+    private void consumeStoredTime(ItemStack stack, EntityPlayer player, int amount) {
+        applyDamage(stack, amount);
+        syncUsedBottle(stack, player);
+    }
+
+    private void syncUsedBottle(ItemStack stack, EntityPlayer player) {
+        player.inventory.markDirty();
+        player.inventoryContainer.detectAndSendChanges();
+
+        if (player instanceof EntityPlayerMP) {
+            int slot = findInventorySlot(player, stack);
+            if (slot >= 0) {
+                ((EntityPlayerMP) player).playerNetServerHandler.sendPacket(new S2FPacketSetSlot(0, slot, stack));
+            }
+        }
+    }
+
+    private int findInventorySlot(EntityPlayer player, ItemStack targetStack) {
+        for (int slot = 0; slot < player.inventory.getSizeInventory(); slot++) {
+            if (player.inventory.getStackInSlot(slot) == targetStack) {
+                return slot < 9 ? slot + 36 : slot;
+            }
+        }
+        return -1;
     }
 
     public void playSound(World world, int x, int y, int z, int nextRate) {
