@@ -9,7 +9,6 @@
 <p align="center">
   <img alt="Forge" src="https://img.shields.io/badge/Forge-555?style=for-the-badge">
   <img alt="1.7.10" src="https://img.shields.io/badge/1.7.10-555?style=for-the-badge">
-  <img alt="Java 8" src="https://img.shields.io/badge/Java%208-555?style=for-the-badge">
 </p>
 
 <p align="center">
@@ -23,7 +22,7 @@
 
 # Time in a Bottle: Rewinded
 
-A Minecraft `1.7.10` Forge backport of Time in a Bottle behavior from the modern `1.20.1` branch, rebuilt as a normal Forge mod for legacy packs.
+A Minecraft `1.7.10` Forge backport of Time in a Bottle behavior from the modern versions, rebuilt for legacy packs.
 
 ## Features
 
@@ -109,8 +108,6 @@ apiAccessBlacklist=[]
 - The addon API is source-compatible in shape, not binary-compatible with modern Minecraft imports.
 
 ## Build Instructions
-
-ForgeGradle `1.2` and Minecraft `1.7.10` are happiest on Java 8:
 
 ```bash
 JAVA_HOME=/usr/lib/jvm/java-8-openjdk ./gradlew --no-daemon clean build
