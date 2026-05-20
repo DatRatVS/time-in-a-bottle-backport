@@ -13,7 +13,7 @@ apply plugin: "forge"
 
 import groovy.json.JsonSlurper
 
-version = "1.0.1"
+version = "1.0.2"
 group = "com.datrat.tiab"
 archivesBaseName = "time-in-a-bottle-1.7.10"
 
